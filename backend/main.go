@@ -20,6 +20,13 @@ func main() {
 		User:     "user",     // Replace with your DB user
 		Password: "password", // Replace with your DB password
 		DBName:   "bookrecsys",
+	}
+
+	db, err := database.ConnectDB(dbConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.CloseDB(db)
 	log.Println("Successfully connected to the database!")
 
 	// Initialize repositories
@@ -45,7 +52,6 @@ func main() {
 	libraryHandler := handlers.NewLibraryHandler(libraryService)
 	userInteractionHandler := handlers.NewUserInteractionHandler(userInteractionService)
 	recommendationHandler := handlers.NewRecommendationHandler(recommendationService)
-
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -87,20 +93,20 @@ func setupRoutes(r *chi.Mux, bookH *handlers.BookHandler, authorH *handlers.Auth
 		r.Get("/", genreH.GetAllGenres)
 		r.Get("/{id}", genreH.GetGenreByID)
 		r.Put("/{id}", genreH.UpdateGenre)
-		r.Get("/", userInteractionH.GetAllUserInteractions)
-		r.Get("/user/{userID}", userInteractionH.GetUserInteractionsByUserID)
+		r.Delete("/{id}", genreH.DeleteGenre) // Added missing delete
+	})
 
 	r.Route("/libraries", func(r chi.Router) {
 		r.Post("/", libraryH.CreateLibrary)
 		r.Get("/", libraryH.GetAllLibraries)
 		r.Get("/{id}", libraryH.GetLibraryByID)
 		r.Put("/{id}", libraryH.UpdateLibrary)
-		r.Get("/", recommendationH.GetAllRecommendations)
-		r.Get("/user/{userID}", recommendationH.GetRecommendationsByUserID)
+		r.Delete("/{id}", libraryH.DeleteLibrary) // Added missing delete
+	})
 
 	r.Route("/user-interactions", func(r chi.Router) {
 		r.Post("/", userInteractionH.CreateUserInteraction)
-		r.Get("/", userInteractionH.GetUserInteractionsByUserID) // Potentially change to query param for all
+		r.Get("/", userInteractionH.GetAllUserInteractions) // Changed to GetAll
 		r.Get("/{id}", userInteractionH.GetUserInteractionByID)
 		r.Get("/user/{userID}", userInteractionH.GetUserInteractionsByUserID)
 		r.Put("/{id}", userInteractionH.UpdateUserInteraction)
@@ -109,29 +115,10 @@ func setupRoutes(r *chi.Mux, bookH *handlers.BookHandler, authorH *handlers.Auth
 
 	r.Route("/recommendations", func(r chi.Router) {
 		r.Post("/", recommendationH.CreateRecommendation)
-		r.Get("/", recommendationH.GetRecommendationsByUserID) // Potentially change to query param for all
+		r.Get("/", recommendationH.GetAllRecommendations) // Changed to GetAll
 		r.Get("/{id}", recommendationH.GetRecommendationByID)
 		r.Get("/user/{userID}", recommendationH.GetRecommendationsByUserID)
 		r.Put("/{id}", recommendationH.UpdateRecommendation)
 		r.Delete("/{id}", recommendationH.DeleteRecommendation)
 	})
-
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer database.CloseDB(db)
-
-	r := chi.NewRouter()
-	r := chi.NewRouter()
-
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.URLFormat)
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to the Book Recommendation System Backend!"))
-	})
-
-	fmt.Println("Server starting on port :8080...")
-	log.Fatal(http.ListenAndServe(":8080", r))
 }
