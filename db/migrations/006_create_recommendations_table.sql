@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS recommendations (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    book_id VARCHAR(255) NOT NULL,
+    score DECIMAL(5, 2) NOT NULL,
+    generated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_book
+        FOREIGN KEY(book_id)
+        REFERENCES books(id)
+        ON DELETE CASCADE
+);
